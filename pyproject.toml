@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pitch-shifter-backend"
+version = "0.1.0"
+description = "Local-first backend scaffold for upload and YouTube ingest with async job tracking"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115,<1.0",
+  "uvicorn[standard]>=0.30,<1.0",
+  "python-multipart>=0.0.9",
+  "yt-dlp>=2025.1.26",
+  "pydantic-settings>=2.4",
+]
+
+[project.scripts]
+pitch-shifter = "pitch_shifter_backend.main:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pitch_shifter_backend"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pitch-shifter-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pitch-shifter-backend
+  template:
+    metadata:
+      labels:
+        app: pitch-shifter-backend
+    spec:
+      containers:
+        - name: api
+          image: pitch-shifter-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PITCH_ENVIRONMENT
+              value: production
+            - name: PITCH_DATA_DIR
+              value: /app/data
+            - name: PITCH_UPLOADS_DIR
+              value: /app/data/uploads
+            - name: PITCH_OUTPUTS_DIR
+              value: /app/data/outputs
+            - name: PITCH_JOBS_DIR
+              value: /app/data/jobs
+          volumeMounts:
+            - name: media-data
+              mountPath: /app/data
+      volumes:
+        - name: media-data
+          persistentVolumeClaim:
+            claimName: pitch-shifter-data
