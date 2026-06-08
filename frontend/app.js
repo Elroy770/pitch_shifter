@@ -185,22 +185,18 @@ function setOutputReady(downloadUrl) {
 function renderJob(job) {
   state.currentJob = job;
   el("jobStatus").textContent = job.status || "unknown";
-  el("jobId").textContent = job.id || job.job_id || "—";
-  el("jobType").textContent = job.type || "—";
   el("jobSource").textContent = job.source_url || job.original_name || "—";
   el("jobShift").textContent = formatShiftLabel(job.shift_semitones);
   el("jobFormat").textContent = (job.output_format || "—")
     .toString()
     .toUpperCase();
-  el("jobDetectedKey").textContent = job.detected_key || "Unknown";
-  el("jobShiftedKey").textContent = job.shifted_key || "Unknown";
 
   const status = job.status || "unknown";
   if (status === "completed") {
     setBadge("Completed", "success");
     const downloadUrl = job.download_url
       ? job.download_url
-      : `/download/${job.id}`;
+      : `/download/${job.job_id || job.id}`;
     setOutputReady(downloadUrl);
     setPlayerContent(downloadUrl, job.media_kind);
   } else if (status === "failed") {
