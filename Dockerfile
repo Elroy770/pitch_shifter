@@ -7,17 +7,18 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies (ffmpeg, ffprobe)
+# Install system dependencies (ffmpeg)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy packaging metadata first so dependency and app installs can be cached.
 COPY pyproject.toml requirements.txt README.md ./
 COPY src ./src
 COPY frontend ./frontend
 
+# Update yt-dlp to ensure it works with the latest YouTube changes
 RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -U yt-dlp \
     && pip install --no-cache-dir .
 
 EXPOSE 8000

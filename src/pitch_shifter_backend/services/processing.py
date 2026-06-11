@@ -246,8 +246,9 @@ async def download_youtube(url: str, destination_dir: Path) -> Path:
         "outtmpl": str(destination_dir / "%(title).200s-%(id)s.%(ext)s"),
         "noplaylist": True,
         "format": "bestvideo+bestaudio/best",
-        "quiet": True,
-        "no_warnings": True,
+        "quiet": False,
+        "no_warnings": False,
+        "verbose": True,
     }
     if settings.youtube_cookies_file is not None:
         cookies_file = settings.youtube_cookies_file
