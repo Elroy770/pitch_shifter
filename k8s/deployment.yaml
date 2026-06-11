@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pitch-shifter-backend
+  namespace: pitch
 spec:
   replicas: 1
   selector:
@@ -14,8 +15,17 @@ spec:
     spec:
       containers:
         - name: api
-          image: pitch-shifter-backend:latest
-          imagePullPolicy: IfNotPresent
+          image: elroymalayov/pitch-shifter-backend:1.5
+          imagePullPolicy: Always
+          command: ["python", "-m", "uvicorn"]
+          args:
+            - "pitch_shifter_backend.main:app"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8000"
+            - "--app-dir"
+            - "/app/src"
           ports:
             - containerPort: 8000
           env:
@@ -29,6 +39,8 @@ spec:
               value: /app/data/outputs
             - name: PITCH_JOBS_DIR
               value: /app/data/jobs
+            - name: PYTHONPATH
+              value: /app/src
           volumeMounts:
             - name: media-data
               mountPath: /app/data

@@ -228,6 +228,8 @@ async def process_job(job_id: str) -> None:
             output_path=primary_output,
             artifacts=artifacts,
         )
+        # Keep only the latest 3 completed jobs and their artifacts.
+        job_store.cleanup_old_jobs(keep_count=3)
     except Exception as exc:  # pragma: no cover - runtime safeguard
         job_store.update(job_id, status="failed", error=str(exc))
 
@@ -238,6 +240,7 @@ async def download_youtube(url: str, destination_dir: Path) -> Path:
     except ImportError as exc:  # pragma: no cover - dependency guard
         raise HTTPException(status_code=500, detail="yt-dlp is not installed") from exc
 
+    settings = get_settings()
     destination_dir.mkdir(parents=True, exist_ok=True)
     options = {
         "outtmpl": str(destination_dir / "%(title).200s-%(id)s.%(ext)s"),
@@ -246,6 +249,14 @@ async def download_youtube(url: str, destination_dir: Path) -> Path:
         "quiet": True,
         "no_warnings": True,
     }
+    if settings.youtube_cookies_file is not None:
+        cookies_file = settings.youtube_cookies_file
+        if not cookies_file.exists():
+            raise HTTPException(
+                status_code=500,
+                detail=f"YouTube cookies file not found: {cookies_file}",
+            )
+        options["cookiefile"] = str(cookies_file)
 
     def _download() -> Path:
         with yt_dlp.YoutubeDL(options) as ydl:

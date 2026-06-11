@@ -272,6 +272,9 @@ async function handleUploadSubmit(event) {
     `${kind === "video" ? "Video" : "Audio"} preview ready`,
     `Selected file: ${file.name}`,
   );
+
+  const submitBtn = el("uploadForm").querySelector("button[type=submit]");
+  submitBtn.disabled = true;
   setBadge("Uploading…");
   el("outputText").textContent = "Submitting the upload to the backend…";
 
@@ -280,20 +283,27 @@ async function handleUploadSubmit(event) {
   formData.append("shift_semitones", String(shift));
   formData.append("output_format", outputFormat);
 
-  const data = await fetchJson("/ingest/upload", {
-    method: "POST",
-    body: formData,
-  });
+  try {
+    const data = await fetchJson("/ingest/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-  renderJob({
-    ...data,
-    original_name: file.name,
-    status: data.status || "queued",
-    shift_semitones: data.shift_semitones ?? shift,
-    output_format: data.output_format || outputFormat,
-    media_kind: data.media_kind || kind,
-  });
-  startPolling(data.job_id || data.id);
+    renderJob({
+      ...data,
+      original_name: file.name,
+      status: data.status || "queued",
+      shift_semitones: data.shift_semitones ?? shift,
+      output_format: data.output_format || outputFormat,
+      media_kind: data.media_kind || kind,
+    });
+    startPolling(data.job_id || data.id);
+  } catch (error) {
+    setBadge("Upload failed", "danger");
+    el("outputText").textContent = error.message || "Upload failed. Check your file and try again.";
+  } finally {
+    submitBtn.disabled = false;
+  }
 }
 
 async function handleYoutubeSubmit(event) {
@@ -309,27 +319,37 @@ async function handleYoutubeSubmit(event) {
   const shift = Number(el("youtubeShift").value || 0);
   const outputFormat = el("youtubeFormat").value;
   setPlayerMode("video", "YouTube source queued", url);
+
+  const submitBtn = el("youtubeForm").querySelector("button[type=submit]");
+  submitBtn.disabled = true;
   setBadge("Submitting…");
   el("outputText").textContent = "Submitting the YouTube URL to the backend…";
 
-  const data = await fetchJson("/ingest/youtube", {
-    method: "POST",
-    body: JSON.stringify({
-      url,
-      shift_semitones: shift,
-      output_format: outputFormat,
-    }),
-  });
+  try {
+    const data = await fetchJson("/ingest/youtube", {
+      method: "POST",
+      body: JSON.stringify({
+        url,
+        shift_semitones: shift,
+        output_format: outputFormat,
+      }),
+    });
 
-  renderJob({
-    ...data,
-    source_url: url,
-    status: data.status || "queued",
-    shift_semitones: data.shift_semitones ?? shift,
-    output_format: data.output_format || outputFormat,
-    media_kind: data.media_kind || "video",
-  });
-  startPolling(data.job_id || data.id);
+    renderJob({
+      ...data,
+      source_url: url,
+      status: data.status || "queued",
+      shift_semitones: data.shift_semitones ?? shift,
+      output_format: data.output_format || outputFormat,
+      media_kind: data.media_kind || "video",
+    });
+    startPolling(data.job_id || data.id);
+  } catch (error) {
+    setBadge("Request failed", "danger");
+    el("outputText").textContent = error.message || "Could not reach the backend. Please try again.";
+  } finally {
+    submitBtn.disabled = false;
+  }
 }
 
 function init() {
@@ -337,17 +357,11 @@ function init() {
   updateYouTubeMode();
 
   el("uploadForm").addEventListener("submit", (event) => {
-    handleUploadSubmit(event).catch((error) => {
-      setBadge("Upload failed", "danger");
-      el("outputText").textContent = error.message;
-    });
+    handleUploadSubmit(event);
   });
 
   el("youtubeForm").addEventListener("submit", (event) => {
-    handleYoutubeSubmit(event).catch((error) => {
-      setBadge("Request failed", "danger");
-      el("outputText").textContent = error.message;
-    });
+    handleYoutubeSubmit(event);
   });
 
   el("uploadFile").addEventListener("change", () => {
@@ -372,6 +386,23 @@ function init() {
   );
   setOutputReady(null);
   checkHealth();
+}
+
+function loadJobById(jobId) {
+  fetchJson(`/jobs/${jobId}`)
+    .then((job) => {
+      renderJob(job);
+      // Scroll to results section
+      el("results").scrollIntoView({ behavior: "smooth" });
+      // If job is still processing, start polling
+      if (job.status === "queued" || job.status === "running") {
+        startPolling(jobId);
+      }
+    })
+    .catch((error) => {
+      setBadge("Error loading job", "danger");
+      el("outputText").textContent = error.message;
+    });
 }
 
 init();

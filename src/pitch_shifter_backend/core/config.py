@@ -12,8 +12,9 @@ class Settings(BaseSettings):
     outputs_dir: Path = Path("data/outputs")
     jobs_dir: Path = Path("data/jobs")
     max_upload_mb: int = 500
-    ffmpeg_path: Path = Path("/opt/homebrew/bin/ffmpeg")
-    ffprobe_path: Path = Path("/opt/homebrew/bin/ffprobe")
+    ffmpeg_path: Path = Path("ffmpeg")
+    ffprobe_path: Path = Path("ffprobe")
+    youtube_cookies_file: Path | None = None
 
     model_config = SettingsConfigDict(env_prefix="PITCH_", env_file=".env", extra="ignore")
 
@@ -24,6 +25,8 @@ class Settings(BaseSettings):
         self.jobs_dir = self.jobs_dir.expanduser().resolve()
         self.ffmpeg_path = self.ffmpeg_path.expanduser()
         self.ffprobe_path = self.ffprobe_path.expanduser()
+        if self.youtube_cookies_file is not None:
+            self.youtube_cookies_file = self.youtube_cookies_file.expanduser()
         return self
 
 

@@ -105,6 +105,16 @@ async def ingest_youtube(payload: IngestUrlRequest, background_tasks: Background
     return _job_response(job)
 
 
+@router.get("/jobs")
+async def list_recent_jobs(limit: int = 10) -> dict[str, object]:
+    """List recent jobs (up to 10)."""
+    jobs = job_store.list_recent(limit=limit)
+    return {
+        "jobs": [_job_response(job) for job in jobs],
+        "total": len(jobs),
+    }
+
+
 @router.get("/jobs/{job_id}")
 async def job_status(job_id: str) -> dict[str, object]:
     job = job_store.get(job_id)
