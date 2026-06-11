@@ -257,7 +257,13 @@ async def download_youtube(url: str, destination_dir: Path) -> Path:
                 status_code=500,
                 detail=f"YouTube cookies file not found: {cookies_file}",
             )
-        options["cookiefile"] = str(cookies_file)
+        import tempfile
+        import shutil
+        # yt-dlp tries to save cookies back, but k8s secrets are read-only.
+        # Copy to a temporary location.
+        tmp_cookies = Path(tempfile.gettempdir()) / "yt_cookies.txt"
+        shutil.copy(cookies_file, tmp_cookies)
+        options["cookiefile"] = str(tmp_cookies)
 
     def _download() -> Path:
         with yt_dlp.YoutubeDL(options) as ydl:
