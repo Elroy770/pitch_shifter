@@ -7,9 +7,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies (ffmpeg)
+# Install system dependencies (ffmpeg and nodejs for yt-dlp JS challenge)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml requirements.txt README.md ./
