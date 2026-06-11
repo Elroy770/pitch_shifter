@@ -249,6 +249,7 @@ async def download_youtube(url: str, destination_dir: Path) -> Path:
         "quiet": False,
         "no_warnings": False,
         "verbose": True,
+        "remote_components": ["ejs:github"],
     }
     if settings.youtube_cookies_file is not None:
         cookies_file = settings.youtube_cookies_file
