@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: elroymalayov/pitch-shifter-backend:1.5
+          image: elroymalayov/pitch-shifter-backend:1.7
           imagePullPolicy: Always
           command: ["python", "-m", "uvicorn"]
           args:
@@ -41,10 +41,18 @@ spec:
               value: /app/data/jobs
             - name: PYTHONPATH
               value: /app/src
+            - name: PITCH_YOUTUBE_COOKIES_FILE
+              value: /app/config/cookies.txt
           volumeMounts:
             - name: media-data
               mountPath: /app/data
+            - name: cookies
+              mountPath: /app/config/cookies.txt
+              subPath: cookies.txt
       volumes:
         - name: media-data
           persistentVolumeClaim:
             claimName: pitch-shifter-data
+        - name: cookies
+          secret:
+            secretName: youtube-cookies

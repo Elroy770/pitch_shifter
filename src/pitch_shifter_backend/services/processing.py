@@ -245,7 +245,7 @@ async def download_youtube(url: str, destination_dir: Path) -> Path:
     options = {
         "outtmpl": str(destination_dir / "%(title).200s-%(id)s.%(ext)s"),
         "noplaylist": True,
-        "format": "best",
+        "format": "bestvideo+bestaudio/best",
         "quiet": True,
         "no_warnings": True,
     }
