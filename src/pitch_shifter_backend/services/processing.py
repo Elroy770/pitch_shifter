@@ -258,13 +258,19 @@ async def download_youtube(url: str, destination_dir: Path) -> Path:
                 status_code=500,
                 detail=f"YouTube cookies file not found: {cookies_file}",
             )
-        import tempfile
         import shutil
-        # yt-dlp tries to save cookies back, but k8s secrets are read-only.
-        # Copy to a temporary location.
-        tmp_cookies = Path(tempfile.gettempdir()) / "yt_cookies.txt"
-        shutil.copy(cookies_file, tmp_cookies)
-        options["cookiefile"] = str(tmp_cookies)
+        
+        # We must store the cookies in a writable, persistent location
+        # because YouTube rotates cookies. If we don't save the rotated cookies,
+        # they become invalid on the next request.
+        persistent_cookies = Path("/app/data/youtube_cookies.txt")
+        
+        # Only copy from the k8s secret if the persistent cookie file doesn't exist
+        # This allows the persistent file to be updated by yt-dlp over time.
+        if not persistent_cookies.exists():
+            shutil.copy(cookies_file, persistent_cookies)
+            
+        options["cookiefile"] = str(persistent_cookies)
 
     def _download() -> Path:
         with yt_dlp.YoutubeDL(options) as ydl:
